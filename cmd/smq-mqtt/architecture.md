@@ -1,7 +1,7 @@
 
 ## Actor Objects 
 
-> Those are object with an active runloop / channels comunication.
+> Objects with an active runloop / channels comunication.
 > An instances is like a thread object.
 
 - Server 
@@ -33,10 +33,10 @@
         - server.go: handleMqttProtocol(router *Router, client *Client)
 
 
-## Comple Objects (no active thread)
 
-> Those are simple classes 
-> with private data and public methods to manipulate data.
+## Semantic data Objects (no active thread)
+
+> Simple Classes with private data and public methods to manipulate data.
 
 - Topic 
     
