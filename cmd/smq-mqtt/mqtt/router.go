@@ -1,7 +1,6 @@
 package mqtt
 
 import (
-	"github.com/smartmq/smartmq"
 	"github.com/smartmq/smartmq/cmd/smq-mqtt/packets"
 	"sync"
 )
@@ -18,10 +17,9 @@ type Router struct {
 	queues      map[string]*Queue
 
 	lock    sync.RWMutex
-	SmartMQ *smartmq.SmartMQ
 }
 
-func NewRouter(mq *smartmq.SmartMQ) *Router {
+func NewRouter() *Router {
 	return &Router{
 		clients:          make(map[string]*Client),
 		connectedClients: make(map[string]*Client),
@@ -31,7 +29,6 @@ func NewRouter(mq *smartmq.SmartMQ) *Router {
 		retainStore:      make(map[string]*packets.PublishPacket),
 		queues:           make(map[string]*Queue),
 		lock:             sync.RWMutex{},
-		SmartMQ:          mq,
 	}
 }
 
