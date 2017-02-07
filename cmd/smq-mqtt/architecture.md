@@ -16,10 +16,17 @@
     
     responsable of publish/subscribe logic, we can have different implementations: 
     ram, redis, kafka, google pubsub, ...
+    
+        Server >>use>> PubSubEngine
 
 - Connection 
     
     A wrapper over a tcp or websocket connection.
+    
+        (Client#1)-----[Connection#1]----->(Server)<------[Connection#2]-----(Client#2)
+    
+        Connecton >>use>> MqttProtocolHandler >>use>> TcpConn
+        
     
 - MqttProtocolHandler
 
@@ -59,3 +66,20 @@
     Wrap a client subscription, with topic filter and qos info.
     This is part of client session or state
     
+
+## Main Flow
+
+- new Server ( -> new PubSubEngine )
+- Listen to TCP connection
+    - On Connect
+        - new Client Object
+        - new Connection ( -> new MqttProtocolHandler ) 
+            with Client and Server instances
+        - Start Connection read/write with tcp socket loop
+        
+            connection interacts with client and server throught channels
+        
+            connection read from tcp and notify client/server 
+            and than write to tcp according to mqtt protocol
+            
+        

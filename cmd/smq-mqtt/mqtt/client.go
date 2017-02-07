@@ -109,7 +109,7 @@ func (c *Client) WritePublishMessage(msg *packets.PublishPacket) {
 	c.outgoing <- msg
 }
 
-func (client *Client) Start(router *Router) {
+func (client *Client) Start() {
 	go client.Read()
 	go client.Write()
 	client.waitForQuit()

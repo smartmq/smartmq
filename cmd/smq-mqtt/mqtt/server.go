@@ -57,7 +57,7 @@ func handleConnection(conn net.Conn, router *Router) {
 	log.Printf("Connection from %v.\n", conn.RemoteAddr())
 
 	go handleMqttProtocol(router, client)
-	client.Start(router)
+	client.Start()
 }
 
 func handleMqttProtocol(router *Router, client *Client) {
@@ -91,9 +91,9 @@ func handleMqttProtocol(router *Router, client *Client) {
 				}
 				proto := connectMsg.ProtocolName
 				if proto == "MQTT" {
-					//log.Printf("MQTT 3.1.1 (%s)\n", proto)
+					log.Printf("MQTT 3.1.1 (%s)\n", proto)
 				} else if proto == "MQIsdp" {
-					//log.Printf("MQTT 3.1 (%s)\n", proto)
+					log.Printf("MQTT 3.1 (%s)\n", proto)
 				} else {
 					log.Printf("Wrong protocol (%s)\n", proto)
 					disconnectAbnormally(client, router)
