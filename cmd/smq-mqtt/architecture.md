@@ -4,9 +4,13 @@
 > Objects with an active runloop / channels comunication.
 > An instances is like a thread object.
 
+- Listener 
+
+    tcp or websocket listener
+
 - Server 
 
-    probabily the main instance who start all others 
+    rapresents server instance
  
 - Client 
     
