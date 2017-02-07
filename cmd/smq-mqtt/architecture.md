@@ -4,17 +4,10 @@
 > Objects with an active runloop / channels comunication.
 > An instances is like a thread object.
 
-- Listener 
-
-    tcp or websocket listener
 
 - Server 
 
     rapresents server instance
- 
-- Client 
-    
-    one instance per client session
 
 - PubSubEngine (Router)
     
@@ -22,6 +15,18 @@
     ram, redis, kafka, google pubsub, ...
     
         Server >>use>> PubSubEngine
+ 
+- Client 
+    
+    one instance per client session
+
+## Networking and protocol handling
+
+- ConnectionListener 
+
+    tcp or websocket listener
+    expose "onNewConnection" Event 
+        with Connection object prepared
 
 - Connection 
     
@@ -29,8 +34,7 @@
     
         (Client#1)-----[Connection#1]----->(Server)<------[Connection#2]-----(Client#2)
     
-        Connecton >>use>> MqttProtocolHandler >>use>> TcpConn
-        
+        Connecton >>use>> MqttProtocolHandler >>use>> TcpConn        
     
 - MqttProtocolHandler
 
@@ -79,7 +83,7 @@
         - new Client Object
         - new Connection ( -> new MqttProtocolHandler ) 
             with Client and Server instances
-        - Start Connection read/write with tcp socket loop
+        - Start Connection read/write tcp socket loop
         
             connection interacts with client and server throught channels
         
