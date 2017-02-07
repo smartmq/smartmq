@@ -1,9 +1,9 @@
 package main
 
 import (
-	"os"
-	"github.com/smartmq/smartmq"
 	"flag"
+	"github.com/smartmq/smartmq"
+	"os"
 )
 
 func main() {
@@ -13,7 +13,6 @@ func main() {
 	msg := flag.String("m", "", "message to publish")
 	enableLogging := flag.Bool("l", false, "activate trace logs")
 	flag.Parse()
-
 
 	redisURL, exists := os.LookupEnv("REDIS_URL")
 	if !exists {

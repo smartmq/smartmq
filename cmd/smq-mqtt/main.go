@@ -1,14 +1,14 @@
 package main
 
 import (
+	"flag"
 	"fmt"
+	"github.com/smartmq/smartmq"
 	"github.com/smartmq/smartmq/cmd/smq-mqtt/mqtt"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
-	"net/http"
-	"github.com/smartmq/smartmq"
-	"flag"
 )
 
 var _redisURL string
@@ -21,7 +21,6 @@ func main() {
 		redisURL = *url
 	}
 	_redisURL = redisURL
-
 
 	mq := smartmq.New(_redisURL, false)
 

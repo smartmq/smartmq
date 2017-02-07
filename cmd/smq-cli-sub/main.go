@@ -3,8 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/smartmq/smartmq"
 	"github.com/pborman/uuid"
+	"github.com/smartmq/smartmq"
 	"log"
 	"os"
 	"os/signal"
@@ -53,4 +53,3 @@ func main() {
 		os.Exit(0)
 	}
 }
-

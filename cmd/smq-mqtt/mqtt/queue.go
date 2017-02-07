@@ -7,13 +7,13 @@ import (
 
 type Queue struct {
 	queue *list.List
-	lock sync.RWMutex
+	lock  sync.RWMutex
 }
 
 func NewQueue() *Queue {
 	return &Queue{
 		queue: list.New(),
-		lock: sync.RWMutex{},
+		lock:  sync.RWMutex{},
 	}
 }
 

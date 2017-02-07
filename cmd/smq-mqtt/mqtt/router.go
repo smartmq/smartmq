@@ -1,9 +1,9 @@
 package mqtt
 
 import (
+	"github.com/smartmq/smartmq"
 	"github.com/smartmq/smartmq/cmd/smq-mqtt/packets"
 	"sync"
-	"github.com/smartmq/smartmq"
 )
 
 type Router struct {
@@ -14,11 +14,11 @@ type Router struct {
 	subscribeChan   chan *Client
 	unsubscribeChan chan *Client
 
-	retainStore     map[string]*packets.PublishPacket
-	queues          map[string]*Queue
+	retainStore map[string]*packets.PublishPacket
+	queues      map[string]*Queue
 
-	lock            sync.RWMutex
-	SmartMQ         *smartmq.SmartMQ
+	lock    sync.RWMutex
+	SmartMQ *smartmq.SmartMQ
 }
 
 func NewRouter(mq *smartmq.SmartMQ) *Router {
@@ -31,7 +31,7 @@ func NewRouter(mq *smartmq.SmartMQ) *Router {
 		retainStore:      make(map[string]*packets.PublishPacket),
 		queues:           make(map[string]*Queue),
 		lock:             sync.RWMutex{},
-		SmartMQ:	  mq,
+		SmartMQ:          mq,
 	}
 }
 

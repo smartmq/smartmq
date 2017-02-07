@@ -1,23 +1,23 @@
 package main
 
 /*
-    POST   /mq/:channel               (publish new message)
-    POST   /mq/:channel/:subscription (add new subscription)
-    GET    /mq/:channel/:subscription (get messages published)
-    DELETE /mq/:channel/:subscription (remove a subscription)
- */
+   POST   /mq/:channel               (publish new message)
+   POST   /mq/:channel/:subscription (add new subscription)
+   GET    /mq/:channel/:subscription (get messages published)
+   DELETE /mq/:channel/:subscription (remove a subscription)
+*/
 import (
-	"net/http"
+	"encoding/json"
+	"flag"
 	"fmt"
 	"github.com/gorilla/mux"
-	"log"
-	"time"
-	"flag"
-	"os"
 	"github.com/smartmq/smartmq"
-	"encoding/json"
 	"github.com/smartmq/smartmq/cmd/smq-rest/restapi"
 	"io/ioutil"
+	"log"
+	"net/http"
+	"os"
+	"time"
 )
 
 type Route struct {
@@ -110,7 +110,6 @@ var routes = Routes{
 	},
 }
 
-
 func Info(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Status: %s", "OK")
 }
@@ -148,7 +147,7 @@ func AddSubscription(w http.ResponseWriter, r *http.Request) {
 
 	subs := restapi.Subscription{
 		Channel: channel,
-		Name: subscription,
+		Name:    subscription,
 	}
 
 	if err := json.NewEncoder(w).Encode(subs); err != nil {

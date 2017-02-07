@@ -5,17 +5,17 @@ type Channel struct {
 }
 
 type Subscription struct {
-	Channel      string `json:"chan,omitempty"`
-	Name	     string `json:"sub,omitempty"`
+	Channel string `json:"chan,omitempty"`
+	Name    string `json:"sub,omitempty"`
 }
 
 type Message struct {
-	Channel      string    `json:"chan,omitempty"`
-	Subscription string    `json:"sub,omitempty"`
-	Content      []byte    `json:"msg,omitempty"`
+	Channel      string `json:"chan,omitempty"`
+	Subscription string `json:"sub,omitempty"`
+	Content      []byte `json:"msg,omitempty"`
 }
 
 type Operation struct {
-	Status	string	`json:"status,omitempty"`
-	Err	string	`json:"err,omitempty"`
+	Status string `json:"status,omitempty"`
+	Err    string `json:"err,omitempty"`
 }

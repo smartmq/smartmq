@@ -1,40 +1,39 @@
 package smartmq
 
 import (
-	"github.com/garyburd/redigo/redis"
-	"strings"
-	"log"
-	"reflect"
-	"os"
 	"fmt"
+	"github.com/garyburd/redigo/redis"
+	"log"
+	"os"
+	"reflect"
+	"strings"
 	"time"
 )
 
 type SmartMQ struct {
-	redisURL string
-	c redis.Conn
+	redisURL      string
+	c             redis.Conn
 	enableLogging bool
 }
 
 type Channel struct {
-	mq *SmartMQ
+	mq      *SmartMQ
 	channel string
-	key string
+	key     string
 }
 
 type Subscription struct {
-	channel *Channel
-	subscription string
-	key string
+	channel       *Channel
+	subscription  string
+	key           string
 	stopComsuming chan bool
 }
 
 type OnMessageFn func(key string, val string)
 
-
 func New(redisURL string, enableLogging bool) *SmartMQ {
 	mq := &SmartMQ{
-		redisURL: redisURL,
+		redisURL:      redisURL,
 		enableLogging: enableLogging,
 	}
 	return mq.Open()
@@ -42,9 +41,9 @@ func New(redisURL string, enableLogging bool) *SmartMQ {
 
 func (mq *SmartMQ) newPool() *redis.Pool {
 	return &redis.Pool{
-		MaxIdle: 3,
+		MaxIdle:     3,
 		IdleTimeout: 240 * time.Second,
-		Dial: func () (redis.Conn, error) {
+		Dial: func() (redis.Conn, error) {
 			return redis.DialURL(mq.redisURL)
 		},
 		TestOnBorrow: func(c redis.Conn, t time.Time) error {
@@ -73,9 +72,9 @@ func (mq *SmartMQ) Close() {
 
 func (mq *SmartMQ) Channel(channel string) *Channel {
 	return &Channel{
-		mq: mq,
+		mq:      mq,
 		channel: channel,
-		key: key(channel, "subscriptions"),
+		key:     key(channel, "subscriptions"),
 	}
 }
 
@@ -132,14 +131,14 @@ func (ch *Channel) Subscriptions() []*Subscription {
 	for i := range subscriptions {
 		sub := subscriptions[i]
 		subs := &Subscription{
-			channel: ch,
-			subscription: sub,
-			key: key(ch.channel, sub, "messages"),
+			channel:       ch,
+			subscription:  sub,
+			key:           key(ch.channel, sub, "messages"),
 			stopComsuming: make(chan bool),
 		}
 		list[i] = subs
 	}
-	return list;
+	return list
 }
 
 func (ch *Channel) AddSubscription(subscription string) *Subscription {
@@ -153,9 +152,9 @@ func (ch *Channel) AddSubscription(subscription string) *Subscription {
 }
 func (ch *Channel) Subscription(subscription string) *Subscription {
 	sub := &Subscription{
-		channel: ch,
-		subscription: subscription,
-		key: key(ch.channel, subscription, "messages"),
+		channel:       ch,
+		subscription:  subscription,
+		key:           key(ch.channel, subscription, "messages"),
 		stopComsuming: make(chan bool),
 	}
 	return sub
@@ -244,8 +243,7 @@ func (subs *Subscription) ToString() string {
 	return fmt.Sprintf("%s (%s)", subs.subscription, subs.key)
 }
 
-
-func key(s... string) string {
+func key(s ...string) string {
 	return strings.Join(s, ".")
 }
 
