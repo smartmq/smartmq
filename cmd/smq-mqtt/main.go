@@ -14,7 +14,7 @@ func main() {
 	go router.Start()
 
 	go mqtt.StartTcpServer(":1883", router)
-	go mqtt.StartWebsocketServer(":11883", router)
+	//go mqtt.StartWebsocketServer(":11883", router)
 
 	// capture ctrl+c
 	c := make(chan os.Signal)

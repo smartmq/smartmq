@@ -112,6 +112,7 @@ func (c *Client) WritePublishMessage(msg *packets.PublishPacket) {
 func (client *Client) Start() {
 	go client.Read()
 	go client.Write()
+	log.Printf("New Client remote addr: %s - id: %s", client.Conn.RemoteAddr().String(), client.ID)
 	client.waitForQuit()
 }
 

@@ -126,7 +126,7 @@ func handleMqttProtocol(router *Router, client *Client) {
 					}
 				} else {
 					router.Connect(client)
-					log.Printf("New Client connected %s", client.ID)
+					log.Printf("New Client connected %s (%s)", client.ID, client.Conn.RemoteAddr().String())
 					connackMsg.SessionPresent = false
 				}
 
@@ -181,7 +181,8 @@ func handleMqttProtocol(router *Router, client *Client) {
 				client.Keepalive.Reset()
 				qos := cp.Details().Qos
 				pubMsg := cp.(*packets.PublishPacket)
-				//log.Printf("%v: PUBLISH qos(%v)", client.ID, pubMsg.Qos)
+				log.Printf("%v - %v: PUBLISH %v",
+					client.Conn.RemoteAddr().String(), client.ID, pubMsg.TopicName)
 
 				switch qos {
 				case 0:
