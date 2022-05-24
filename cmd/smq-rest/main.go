@@ -10,14 +10,15 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/gorilla/mux"
-	"github.com/smartmq/smartmq"
-	"github.com/smartmq/smartmq/cmd/smq-rest/restapi"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/gorilla/mux"
+	"github.com/smartmq/smartmq"
+	"github.com/smartmq/smartmq/cmd/smq-rest/restapi"
 )
 
 type Route struct {
@@ -172,10 +173,8 @@ func GetMessages(w http.ResponseWriter, r *http.Request) {
 
 	if msgContent != nil && len(msgContent) > 0 {
 		contentType := http.DetectContentType(msgContent)
-		//log.Println(contentType)
 		w.Header().Add("Content-Type", contentType)
 		w.Write(msgContent)
-		//w.Write([]byte("\n"))
 	}
 }
 func RemoveSubscription(w http.ResponseWriter, r *http.Request) {
