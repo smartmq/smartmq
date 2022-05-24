@@ -10,14 +10,15 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/gorilla/mux"
-	"github.com/smartmq/smartmq"
-	"github.com/smartmq/smartmq/cmd/smq-rest/restapi"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/gorilla/mux"
+	"github.com/smartmq/smartmq"
+	"github.com/smartmq/smartmq/cmd/smq-rest/restapi"
 )
 
 type Route struct {
