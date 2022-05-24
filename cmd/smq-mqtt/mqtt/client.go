@@ -109,9 +109,10 @@ func (c *Client) WritePublishMessage(msg *packets.PublishPacket) {
 	c.outgoing <- msg
 }
 
-func (client *Client) Start(router *Router) {
+func (client *Client) Start() {
 	go client.Read()
 	go client.Write()
+	log.Printf("New Client remote addr: %s - id: %s", client.Conn.RemoteAddr().String(), client.ID)
 	client.waitForQuit()
 }
 

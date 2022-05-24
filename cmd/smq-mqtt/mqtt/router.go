@@ -16,7 +16,7 @@ type Router struct {
 	retainStore map[string]*packets.PublishPacket
 	queues      map[string]*Queue
 
-	lock    sync.RWMutex
+	lock sync.RWMutex
 }
 
 func NewRouter() *Router {
@@ -34,13 +34,11 @@ func NewRouter() *Router {
 
 func (router *Router) addClient(c *Client) {
 	router.lock.Lock()
-	//defer router.lock.Unlock()
 	router.clients[c.ID] = c
 	router.lock.Unlock()
 }
 func (router *Router) removeClient(c *Client) {
 	router.lock.Lock()
-	//defer router.lock.Unlock()
 	delete(router.clients, c.ID)
 	router.lock.Unlock()
 }
@@ -119,26 +117,22 @@ func sendMessageToClientIfMatch(client *Client, msg *packets.PublishPacket) {
 
 func (r *Router) Connect(c *Client) {
 	r.lock.Lock()
-	//defer r.lock.Unlock()
 	r.connectedClients[c.ID] = c
 	r.lock.Unlock()
 }
 func (r *Router) Disconnect(c *Client) {
 	r.lock.Lock()
-	//defer r.lock.Unlock()
 	delete(r.connectedClients, c.ID)
 	r.lock.Unlock()
 }
 func (r *Router) Connected(c *Client) bool {
 	r.lock.RLock()
-	//defer r.lock.RUnlock()
 	_, present := r.connectedClients[c.ID]
 	r.lock.RUnlock()
 	return present
 }
 func (r *Router) GetConnected(client_id string) *Client {
 	r.lock.RLock()
-	//defer r.lock.RUnlock()
 	c, _ := r.connectedClients[client_id]
 	r.lock.RUnlock()
 	return c

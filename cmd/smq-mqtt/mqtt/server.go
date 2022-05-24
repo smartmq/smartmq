@@ -57,7 +57,7 @@ func handleConnection(conn net.Conn, router *Router) {
 	log.Printf("Connection from %v.\n", conn.RemoteAddr())
 
 	go handleMqttProtocol(router, client)
-	client.Start(router)
+	client.Start()
 }
 
 func handleMqttProtocol(router *Router, client *Client) {
@@ -91,9 +91,9 @@ func handleMqttProtocol(router *Router, client *Client) {
 				}
 				proto := connectMsg.ProtocolName
 				if proto == "MQTT" {
-					//log.Printf("MQTT 3.1.1 (%s)\n", proto)
+					log.Printf("MQTT 3.1.1 (%s)\n", proto)
 				} else if proto == "MQIsdp" {
-					//log.Printf("MQTT 3.1 (%s)\n", proto)
+					log.Printf("MQTT 3.1 (%s)\n", proto)
 				} else {
 					log.Printf("Wrong protocol (%s)\n", proto)
 					disconnectAbnormally(client, router)
@@ -126,7 +126,7 @@ func handleMqttProtocol(router *Router, client *Client) {
 					}
 				} else {
 					router.Connect(client)
-					log.Printf("New Client connected %s", client.ID)
+					log.Printf("New Client connected %s (%s)", client.ID, client.Conn.RemoteAddr().String())
 					connackMsg.SessionPresent = false
 				}
 
@@ -181,7 +181,8 @@ func handleMqttProtocol(router *Router, client *Client) {
 				client.Keepalive.Reset()
 				qos := cp.Details().Qos
 				pubMsg := cp.(*packets.PublishPacket)
-				//log.Printf("%v: PUBLISH qos(%v)", client.ID, pubMsg.Qos)
+				log.Printf("%v - %v: PUBLISH %v",
+					client.Conn.RemoteAddr().String(), client.ID, pubMsg.TopicName)
 
 				switch qos {
 				case 0:
