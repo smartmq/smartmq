@@ -1,5 +1,5 @@
 # smart-mq 
-_A Pub/Sub wrapper service over redis_
+_A Pub/Sub server backed by redis_
 
 ## Concepts
 
@@ -20,15 +20,15 @@ the messages are dispatched one per client, so client receive partial data.
 If a client want receive all data from a channel, 
 it must create an unique subscription.
 
-## Verbs
+## Actions
 
-### Subscription phase
+### Subscription
 - register a new subscription to a channel
 - consume data from subscription of a channel
 - remove subscription from channel
 - purge a subscription of a channel
 
-### Publish phase
+### Publish
 - publish a message into a channel
 
 
@@ -41,5 +41,9 @@ it must create an unique subscription.
 
 ## MQTT Protocol
 
+    TODO
+
+
 ## gRPC Protocol
 
+    TODO
