@@ -83,11 +83,9 @@ func (client *Client) Quit() {
 	client.quit <- true
 }
 func (client *Client) waitForQuit() {
-	select {
-	case ret := <-client.quit:
-		if ret {
-			return
-		}
+	ret := <-client.quit
+	if ret {
+		return
 	}
 }
 func (c *Client) IsSubscribed(publishingTopic string) (bool, byte) {
