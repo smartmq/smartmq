@@ -2,12 +2,13 @@ package mqtt
 
 import (
 	"fmt"
-	"github.com/smartmq/smartmq/cmd/smq-mqtt/packets"
-	"golang.org/x/net/websocket"
 	"log"
 	"net"
 	"net/http"
 	"time"
+
+	"github.com/smartmq/smartmq/cmd/smq-mqtt/packets"
+	"golang.org/x/net/websocket"
 )
 
 func StartTcpServer(laddr string, router *Router) {
@@ -105,14 +106,10 @@ func handleMqttProtocol(router *Router, client *Client) {
 					log.Printf("Client alredy connected %s", client.ID)
 					connackMsg.SessionPresent = true
 
-					// recupera la sessione trovata ...
+					// recover previous session ...
 					oldClient := router.GetConnected(client.ID)
 					sameConnection := oldClient.Conn == client.Conn
-					//oldClientConnected := oldClient.IsConnected()
-
-					//log.Printf("Old Client connected: %s, same connection: %s", oldClientConnected, sameConnection)
-					log.Printf("Old Client same connection: %s", sameConnection)
-
+					log.Printf("Old Client same connection: %t", sameConnection)
 					if sameConnection {
 						disconnectAbnormally(client, router)
 						break
@@ -138,6 +135,7 @@ func handleMqttProtocol(router *Router, client *Client) {
 				client.FlushQueuedMessages()
 
 				break
+
 			case *packets.SubscribePacket:
 				client.Keepalive.Reset()
 
