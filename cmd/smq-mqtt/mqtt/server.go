@@ -62,194 +62,184 @@ func handleConnection(conn net.Conn, router *Router) {
 }
 
 func handleMqttProtocol(router *Router, client *Client) {
-	for {
-		select {
-		case cp := <-client.incoming:
-			//log.Printf(">> %v \n", cp.String())
+	for cp := range client.incoming {
+		//log.Printf(">> %v \n", cp.String())
 
-			//msgType := cp.GetMessageType()
-			switch cp.(type) {
+		//msgType := cp.GetMessageType()
+		switch cp.(type) {
 
-			case *packets.ConnectPacket:
-				connectMsg := cp.(*packets.ConnectPacket)
-				client.ID = connectMsg.ClientIdentifier
-				client.CleanSession = connectMsg.CleanSession
-				client.Keepalive = NewKeepalive(connectMsg.Keepalive)
-				client.Keepalive.ExpiredCallback = func(t time.Time) {
-					log.Printf("Keepalive time exausted for client: %s", client.ID)
-					disconnectAbnormally(client, router)
-				}
-
-				if connectMsg.WillFlag {
-					will := packets.NewControlPacket(packets.Publish).(*packets.PublishPacket)
-					will.TopicName = connectMsg.WillTopic
-					will.Payload = connectMsg.WillMessage
-					will.Qos = connectMsg.WillQos
-					client.WillMessage = will
-					if client.WillMessage != nil {
-						log.Printf("Client %s has will message\n", client.ID)
-					}
-				}
-				proto := connectMsg.ProtocolName
-				if proto == "MQTT" {
-					log.Printf("MQTT 3.1.1 (%s)\n", proto)
-				} else if proto == "MQIsdp" {
-					log.Printf("MQTT 3.1 (%s)\n", proto)
-				} else {
-					log.Printf("Wrong protocol (%s)\n", proto)
-					disconnectAbnormally(client, router)
-					break
-				}
-				connackMsg := packets.NewControlPacket(packets.Connack).(*packets.ConnackPacket)
-
-				if router.Connected(client) {
-					log.Printf("Client alredy connected %s", client.ID)
-					connackMsg.SessionPresent = true
-
-					// recover previous session ...
-					oldClient := router.GetConnected(client.ID)
-					sameConnection := oldClient.Conn == client.Conn
-					log.Printf("Old Client same connection: %t", sameConnection)
-					if sameConnection {
-						disconnectAbnormally(client, router)
-						break
-					} else {
-						if !connectMsg.CleanSession {
-							oldClient.CopyTo(client)
-							// swap clients ...
-							router.Disconnect(oldClient)
-						}
-						router.Connect(client)
-					}
-				} else {
-					router.Connect(client)
-					log.Printf("New Client connected %s (%s)", client.ID, client.Conn.RemoteAddr().String())
-					connackMsg.SessionPresent = false
-				}
-
-				client.outgoing <- connackMsg
-
-				// start keepalive timer for this client
-				client.Keepalive.Start()
-
-				client.FlushQueuedMessages()
-
-				break
-
-			case *packets.SubscribePacket:
-				client.Keepalive.Reset()
-
-				subackMsg := packets.NewControlPacket(packets.Suback).(*packets.SubackPacket)
-				subackMsg.MessageID = cp.Details().MessageID
-				router.Subscribe(client)
-
-				subMsg := cp.(*packets.SubscribePacket)
-				topics := subMsg.Topics
-				qoss := subMsg.Qoss
-
-				for i := 0; i < len(topics); i++ {
-					topic := topics[i]
-					var qos byte
-					if i < len(qoss) {
-						qos = qoss[i]
-					} else {
-						qos = 0x0
-					}
-					s := NewSubscription(topic, qos)
-					client.Subscriptions[topic] = s
-				}
-
-				client.outgoing <- subackMsg
-
-				router.RepublishRetainedMessages(client, subMsg)
-				break
-			case *packets.UnsubscribePacket:
-				client.Keepalive.Reset()
-				router.Unsubscribe(client)
-				unsubackMsg := packets.NewControlPacket(packets.Unsuback).(*packets.UnsubackPacket)
-				unsubackMsg.MessageID = cp.Details().MessageID
-				client.outgoing <- unsubackMsg
-				break
-			case *packets.DisconnectPacket:
-				client.Keepalive.Reset()
-				disconnect(client, router)
-				break
-			case *packets.PublishPacket:
-
-				client.Keepalive.Reset()
-				qos := cp.Details().Qos
-				pubMsg := cp.(*packets.PublishPacket)
-				log.Printf("%v - %v: PUBLISH %v",
-					client.Conn.RemoteAddr().String(), client.ID, pubMsg.TopicName)
-
-				switch qos {
-				case 0:
-					router.Publish(pubMsg)
-					break
-				case 1:
-					router.Publish(pubMsg)
-					pubAck := packets.NewControlPacket(packets.Puback).(*packets.PubackPacket)
-					pubAck.MessageID = cp.Details().MessageID
-					client.outgoing <- pubAck
-					break
-				case 2:
-					router.Publish(pubMsg)
-					pubRec := packets.NewControlPacket(packets.Pubrec).(*packets.PubrecPacket)
-					pubRec.MessageID = cp.Details().MessageID
-					client.outgoing <- pubRec
-					break
-				}
-
-			case *packets.PubackPacket:
-				client.Keepalive.Reset()
-				// PUBACK (receiver) response to PUBLISH in QOS=1
-				client.queue.DequeueMessage()
-
-				//pubAck := cp.(*packets.PubackPacket)
-				//log.Printf("%v: PUBACK qos(%v)", client.ID, pubAck.Qos)
-				break
-
-			case *packets.PubrecPacket:
-				client.Keepalive.Reset()
-				// PUBREC (receiver) response to PUBLISH in QOS=2
-				//pubRec := cp.(*packets.PubrecPacket)
-				//log.Printf("%v: PUBREC qos(%v)", client.ID, pubRec.Qos)
-				pubRel := packets.NewControlPacket(packets.Pubrel).(*packets.PubrelPacket)
-				pubRel.MessageID = cp.Details().MessageID
-				client.outgoing <- pubRel
-				break
-
-			case *packets.PubrelPacket:
-				client.Keepalive.Reset()
-				// PUBREL (sender) response to PUBREC in QOS=2
-				//pubRel := cp.(*packets.PubrelPacket)
-				//log.Printf("%v: PUBREL qos(%v)", client.ID, pubRel.Qos)
-				pubComp := packets.NewControlPacket(packets.Pubcomp).(*packets.PubcompPacket)
-				pubComp.MessageID = cp.Details().MessageID
-				client.outgoing <- pubComp
-				break
-
-			case *packets.PubcompPacket:
-				client.Keepalive.Reset()
-				// PUBCOMP (receiver) response to PUBREL in QOS=2
-				client.queue.DequeueMessage()
-
-				//pubComp := cp.(*packets.PubcompPacket)
-				//log.Printf("%v: PUBCOMP qos(%v)", client.ID, pubComp.Qos)
-				break
-
-			case *packets.PingreqPacket:
-				client.Keepalive.Reset()
-				pingresp := packets.NewControlPacket(packets.Pingresp).(*packets.PingrespPacket)
-				client.outgoing <- pingresp
-				break
-
-			default:
+		case *packets.ConnectPacket:
+			connectMsg := cp.(*packets.ConnectPacket)
+			client.ID = connectMsg.ClientIdentifier
+			client.CleanSession = connectMsg.CleanSession
+			client.Keepalive = NewKeepalive(connectMsg.Keepalive)
+			client.Keepalive.ExpiredCallback = func(t time.Time) {
+				log.Printf("Keepalive time exausted for client: %s", client.ID)
 				disconnectAbnormally(client, router)
 			}
 
+			if connectMsg.WillFlag {
+				will := packets.NewControlPacket(packets.Publish).(*packets.PublishPacket)
+				will.TopicName = connectMsg.WillTopic
+				will.Payload = connectMsg.WillMessage
+				will.Qos = connectMsg.WillQos
+				client.WillMessage = will
+				if client.WillMessage != nil {
+					log.Printf("Client %s has will message\n", client.ID)
+				}
+			}
+			proto := connectMsg.ProtocolName
+			if proto == "MQTT" {
+				log.Printf("MQTT 3.1.1 (%s)\n", proto)
+			} else if proto == "MQIsdp" {
+				log.Printf("MQTT 3.1 (%s)\n", proto)
+			} else {
+				log.Printf("Wrong protocol (%s)\n", proto)
+				disconnectAbnormally(client, router)
+				break
+			}
+			connackMsg := packets.NewControlPacket(packets.Connack).(*packets.ConnackPacket)
+
+			if router.Connected(client) {
+				log.Printf("Client alredy connected %s", client.ID)
+				connackMsg.SessionPresent = true
+
+				// recover previous session ...
+				oldClient := router.GetConnected(client.ID)
+				sameConnection := oldClient.Conn == client.Conn
+				log.Printf("Old Client same connection: %t", sameConnection)
+				if sameConnection {
+					disconnectAbnormally(client, router)
+					break
+				} else {
+					if !connectMsg.CleanSession {
+						oldClient.CopyTo(client)
+						// swap clients ...
+						router.Disconnect(oldClient)
+					}
+					router.Connect(client)
+				}
+			} else {
+				router.Connect(client)
+				log.Printf("New Client connected %s (%s)", client.ID, client.Conn.RemoteAddr().String())
+				connackMsg.SessionPresent = false
+			}
+
+			client.outgoing <- connackMsg
+
+			// start keepalive timer for this client
+			client.Keepalive.Start()
+
+			client.FlushQueuedMessages()
+
+		case *packets.SubscribePacket:
+			client.Keepalive.Reset()
+
+			subackMsg := packets.NewControlPacket(packets.Suback).(*packets.SubackPacket)
+			subackMsg.MessageID = cp.Details().MessageID
+			router.Subscribe(client)
+
+			subMsg := cp.(*packets.SubscribePacket)
+			topics := subMsg.Topics
+			qoss := subMsg.Qoss
+
+			for i := 0; i < len(topics); i++ {
+				topic := topics[i]
+				var qos byte
+				if i < len(qoss) {
+					qos = qoss[i]
+				} else {
+					qos = 0x0
+				}
+				s := NewSubscription(topic, qos)
+				client.Subscriptions[topic] = s
+			}
+
+			client.outgoing <- subackMsg
+
+			router.RepublishRetainedMessages(client, subMsg)
+
+		case *packets.UnsubscribePacket:
+			client.Keepalive.Reset()
+			router.Unsubscribe(client)
+			unsubackMsg := packets.NewControlPacket(packets.Unsuback).(*packets.UnsubackPacket)
+			unsubackMsg.MessageID = cp.Details().MessageID
+			client.outgoing <- unsubackMsg
+
+		case *packets.DisconnectPacket:
+			client.Keepalive.Reset()
+			disconnect(client, router)
+
+		case *packets.PublishPacket:
+
+			client.Keepalive.Reset()
+			qos := cp.Details().Qos
+			pubMsg := cp.(*packets.PublishPacket)
+			log.Printf("%v - %v: PUBLISH %v",
+				client.Conn.RemoteAddr().String(), client.ID, pubMsg.TopicName)
+
+			switch qos {
+			case 0:
+				router.Publish(pubMsg)
+
+			case 1:
+				router.Publish(pubMsg)
+				pubAck := packets.NewControlPacket(packets.Puback).(*packets.PubackPacket)
+				pubAck.MessageID = cp.Details().MessageID
+				client.outgoing <- pubAck
+
+			case 2:
+				router.Publish(pubMsg)
+				pubRec := packets.NewControlPacket(packets.Pubrec).(*packets.PubrecPacket)
+				pubRec.MessageID = cp.Details().MessageID
+				client.outgoing <- pubRec
+			}
+
+		case *packets.PubackPacket:
+			client.Keepalive.Reset()
+			// PUBACK (receiver) response to PUBLISH in QOS=1
+			client.queue.DequeueMessage()
+
+			//pubAck := cp.(*packets.PubackPacket)
+			//log.Printf("%v: PUBACK qos(%v)", client.ID, pubAck.Qos)
+
+		case *packets.PubrecPacket:
+			client.Keepalive.Reset()
+			// PUBREC (receiver) response to PUBLISH in QOS=2
+			//pubRec := cp.(*packets.PubrecPacket)
+			//log.Printf("%v: PUBREC qos(%v)", client.ID, pubRec.Qos)
+			pubRel := packets.NewControlPacket(packets.Pubrel).(*packets.PubrelPacket)
+			pubRel.MessageID = cp.Details().MessageID
+			client.outgoing <- pubRel
+
+		case *packets.PubrelPacket:
+			client.Keepalive.Reset()
+			// PUBREL (sender) response to PUBREC in QOS=2
+			//pubRel := cp.(*packets.PubrelPacket)
+			//log.Printf("%v: PUBREL qos(%v)", client.ID, pubRel.Qos)
+			pubComp := packets.NewControlPacket(packets.Pubcomp).(*packets.PubcompPacket)
+			pubComp.MessageID = cp.Details().MessageID
+			client.outgoing <- pubComp
+
+		case *packets.PubcompPacket:
+			client.Keepalive.Reset()
+			// PUBCOMP (receiver) response to PUBREL in QOS=2
+			client.queue.DequeueMessage()
+
+			//pubComp := cp.(*packets.PubcompPacket)
+			//log.Printf("%v: PUBCOMP qos(%v)", client.ID, pubComp.Qos)
+
+		case *packets.PingreqPacket:
+			client.Keepalive.Reset()
+			pingresp := packets.NewControlPacket(packets.Pingresp).(*packets.PingrespPacket)
+			client.outgoing <- pingresp
+
+		default:
+			disconnectAbnormally(client, router)
 		}
+
 	}
+
 }
 
 func disconnect(client *Client, router *Router) {

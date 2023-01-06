@@ -1,8 +1,9 @@
 package mqtt
 
 import (
-	"github.com/smartmq/smartmq/cmd/smq-mqtt/packets"
 	"sync"
+
+	"github.com/smartmq/smartmq/cmd/smq-mqtt/packets"
 )
 
 type Router struct {
@@ -133,7 +134,7 @@ func (r *Router) Connected(c *Client) bool {
 }
 func (r *Router) GetConnected(client_id string) *Client {
 	r.lock.RLock()
-	c, _ := r.connectedClients[client_id]
+	c := r.connectedClients[client_id]
 	r.lock.RUnlock()
 	return c
 }

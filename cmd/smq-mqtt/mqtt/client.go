@@ -2,9 +2,10 @@ package mqtt
 
 import (
 	"bufio"
-	"github.com/smartmq/smartmq/cmd/smq-mqtt/packets"
 	"log"
 	"net"
+
+	"github.com/smartmq/smartmq/cmd/smq-mqtt/packets"
 )
 
 type Client struct {
@@ -56,7 +57,7 @@ func (client *Client) Write() {
 		//log.Printf(">> %v \n", data)
 		err := data.Write(client.writer)
 		if err != nil {
-			//log.Println("write ", client.ID, " ",  err)
+			log.Println("write ", client.ID, " ", err)
 		}
 		err2 := client.writer.Flush()
 		if err2 != nil {
@@ -70,7 +71,6 @@ func (client *Client) Write() {
 					if pubMsg.Qos == 1 || pubMsg.Qos == 2 {
 						client.queue.EnqueueMessage(pubMsg)
 					}
-					break
 				}
 			}
 		}
